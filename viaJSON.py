@@ -25,7 +25,7 @@ def mining(url):
 
     obj = loads("".join(targStr))
 
-    return {"arbeitgeber":obj['stst']['company']['companyname'], "plz": obj['stst']['listing']['zipcode'], "stadt":obj['stst']['listing']['cityname'],"job":obj['stst']['listing']['title'], "istDurchEmail" : obj['stst']['listing']['applyform']['type'] == "email" }
+    return {"arbeitgeber":obj['stst']['company']['companyname'], "plz": obj['stst']['listing']['zipcode'], "stadt":obj['stst']['listing']['cityname'],"job":obj['stst']['listing']['title'], "istDurchEmail": obj['stst']['listing']['applyform']['type'] == "email" }
 
 if __name__ == "__main__":
     url = r"http://www.stepstone.de/stellenangebote--Programmierer-Hotline-m-w-Hannover-KOMET-BRINKHAUS-GmbH--3615759-inline.html"
