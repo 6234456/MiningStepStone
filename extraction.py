@@ -45,6 +45,7 @@ def mining(url):
     content = requests.post(url_main, headers=headers)
     soup = bs4.BeautifulSoup(content.content.decode('utf-8'), "lxml")
 
+    # TODO there might be rare cases that strasse can not match for example Zur Aue 2
     strasse = compile(r"([\w-]+\s?(Platz|Str\.|Straße|Allee|Weg|Ring)\s+\d+)", IGNORECASE)
     email = compile(r"[\w.-]+@[\w.-]+")
 
