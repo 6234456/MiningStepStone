@@ -25,6 +25,7 @@ def mining(url):
     content = requests.post(url, headers=headers)
 
     soup = bs4.BeautifulSoup(content.content.decode('utf-8'), "lxml")
+    # print(soup.prettify())
 
 
     # step 1
@@ -36,7 +37,7 @@ def mining(url):
     obj = loads("".join(targStr))
 
     # dict to hold the info
-    info = {"arbeitgeber":obj['stst']['company']['companyname'], "plz": obj['stst']['listing']['zipcode'], "stadt":obj['stst']['listing']['cityname'],"job":obj['stst']['listing']['title'], "istDurchEmail": obj['stst']['listing']['applyform']['type'] == "email", "ssID":obj['stst']['company']['companyid'] }
+    info = {"jobID":obj['stst']['listing']['listingid'] , "url": url, "arbeitgeber":obj['stst']['company']['companyname'], "plz": obj['stst']['listing']['zipcode'], "stadt":obj['stst']['listing']['cityname'],"job":obj['stst']['listing']['title'], "istDurchEmail": obj['stst']['listing']['applyform']['type'] == "email", "agID":obj['stst']['company']['companyid'] }
 
     info['email'] = None
     info['strasse'] = None
@@ -44,7 +45,7 @@ def mining(url):
 
     # step 1.5
     # http://www.stepstone.de/stellenangebote-des-unternehmens--{name_mit_bindstrich}--{id}.html
-    tmpl = r"http://www.stepstone.de/stellenangebote-des-unternehmens--{0}--{1}.html".format("-".join(info["arbeitgeber"].split(" ")), info["ssID"])
+    tmpl = r"http://www.stepstone.de/stellenangebote-des-unternehmens--{0}--{1}.html".format("-".join(info["arbeitgeber"].split(" ")), info["agID"])
     content = requests.post(tmpl, headers=headers)
     soup = bs4.BeautifulSoup(content.content.decode('utf-8'), "lxml")
 
@@ -115,5 +116,5 @@ def __processStr(string, info, email, strasse):
         info['strasse'] = strasse.findall(string)[0][0].strip()
 
 if __name__ == "__main__":
-    url = r"http://www.stepstone.de/stellenangebote--Senior-Project-Manager-China-m-w-Dortmund-babymarkt-de-GmbH--3623099-inline.html"
+    url = r"http://www.stepstone.de/stellenangebote--Controller-in-Neuss-Masterwork-Machinery-GmbH--3628963-inline.html"
     print(mining(url))
