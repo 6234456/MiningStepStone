@@ -27,6 +27,16 @@
                 $scope.current.ansp_vor = null;
                 $scope.current.ansp_nach = null;
             }else{
+                if(!$scope.current.ansprechpartner){
+                      $mdToast.show(
+                          $mdToast.simple()
+                            .textContent('Name ist Leer aber mit Anrede! ')
+                            .position("bottom right")
+                            .hideDelay(3000)
+                      );
+                    return;
+                }
+
                 if($scope.current.ansprechpartner.indexOf("/") !== -1){
                     var tmp = $scope.current.ansprechpartner.split("/")
                     $scope.current.ansp_vor = tmp[0].trim();
