@@ -61,7 +61,7 @@ class Job(Base):
     ag_id = Column(Integer, ForeignKey('arbeitgeber.id'))
 
     def toDict(self):
-        d = {"id":self.id, "name":self.name, "url":self.url, "plz":self.plz, "stadt":self.stadt,
+        d = {"id":self.id, "name":self.name, "url":self.url, "plz":self.plz, "stadt":self.stadt, "strasse": self.strasse,
              "durch_email":self.durch_email, "email":self.email, "bemerkung": self.bemerkung,
              "entritt":self.eintritt, "gehalt" : self.gehalt, "status_id": self.status_id,
              "status": self.status.beschreibung, "eingetragen_am": dateToString(self.eingetragen_am),

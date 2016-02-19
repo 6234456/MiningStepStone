@@ -35,17 +35,19 @@
 
 <div ng-controller="AppCtrl" ng-cloak>
     <md-content>
-        <md-tabs md-dynamic-height md-border-bottom>
+        <md-tabs md-dynamic-height md-border-bottom md-selected="activeTabNr">
             <md-tab label="Übersicht">
                 <md-content class="md-padding">
                     <md-list>
                         <md-subheader class="md-no-sticky">{{cnt}}</md-subheader>
-                        <div ng-repeat="item in data">
+                        <div ng-repeat="item in data track by $index">
                             <md-list-item class="md-3-line" layout="row">
                                 <div class="md-list-item-text" layout="column">
                                     <h3><a ng-href="{{item.url}}">{{ item.name }}</a></h3>
-                                    <p>{{ item.arbeitgeber }}</p>
-                                    <p><span>{{ item.plz }} </span><span>{{ item.stadt }}</span></p>
+                                    <div ng-click="selectItem($index)">
+                                        <p>{{ item.arbeitgeber }}</p>
+                                        <p><span>{{ item.plz }} </span><span>{{ item.stadt }}</span></p>
+                                    </div>
                                 </div>
                                 <div class="md-secondary">
                                     {{ item.status }}
@@ -67,10 +69,74 @@
 
                 </md-content>
             </md-tab>
-            <md-tab label="three">
+
+            <md-tab label="Bewerbung">
                 <md-content class="md-padding">
-                    <h1 class="md-display-2">Tab Three</h1>
-                    <p>Integer turpis erat, porttitor vitae mi faucibus, laoreet interdum tellus. Curabitur posuere molestie dictum. Morbi eget congue risus, quis rhoncus quam. Suspendisse vitae hendrerit erat, at posuere mi. Cras eu fermentum nunc. Sed id ante eu orci commodo volutpat non ac est. Praesent ligula diam, congue eu enim scelerisque, finibus commodo lectus.</p>
+                        <div>
+                            <form name="userForm">
+
+                                <div layout-gt-sm="row">
+                                    <md-input-container class="md-block" flex-gt-sm>
+                                        <label>Title</label>
+                                        <input ng-model="current.name">
+                                    </md-input-container>
+
+                                    <md-input-container class="md-block" flex-gt-sm>
+                                        <label>Arbeitgeber</label>
+                                        <input ng-model="current.arbeitgeber">
+                                    </md-input-container>
+
+                                    <md-input-container class="md-block" flex-gt-sm>
+                                        <label>Strasse/Hausnummer</label>
+                                        <input ng-model="current.strasse">
+                                    </md-input-container>
+
+                                    <md-input-container class="md-block" flex-gt-sm>
+                                        <label>Stadt</label>
+                                        <input ng-model="current.stadt">
+                                    </md-input-container>
+                                    <md-input-container class="md-block" flex-gt-sm>
+                                        <label>Postal Code</label>
+                                        <input name="postalCode" ng-model="current.plz" placeholder="12345"
+                                               required ng-pattern="/^[0-9]{5}$/" md-maxlength="5">
+                                        <div ng-messages="userForm.postalCode.$error" role="alert" multiple>
+                                            <div ng-message="required" class="my-message">You must supply a postal code.</div>
+                                            <div ng-message="pattern" class="my-message">That doesn't look like a valid postal
+                                                code.
+                                            </div>
+                                            <div ng-message="md-maxlength" class="my-message">
+                                                Don't use the long version silly...we don't need to be that specific...
+                                            </div>
+                                        </div>
+                                    </md-input-container>
+                                </div>
+
+                                <div layout-gt-sm="row">
+                                    <md-input-container class="md-block" flex-gt-sm>
+                                        <label>Ansprechpartner</label>
+                                        <input ng-model="current.ansprechpartner" ng-disabled="anspr_disabled">
+                                    </md-input-container>
+                                    <md-input-container class="md-block" flex-gt-sm>
+                                        <label>Anrede</label>
+                                        <md-select ng-model="current.anrede" ng-change="checkAnspr()">
+                                            <md-option ng-repeat="i in anrede" value="{{i}}">{{i}}</md-option>
+                                        </md-select>
+                                    </md-input-container>
+                                    <md-input-container class="md-block" flex-gt-sm>
+                                        <label>Email</label>
+                                        <input ng-model="current.email" type="email" ng-disabled="!current.durch_email" >
+                                    </md-input-container>
+                                </div>
+
+                                <md-input-container class="md-block">
+                                    <label>Bemerkung</label>
+                                    <textarea ng-model="current.bemerkung" md-maxlength="150" rows="5" md-select-on-focus></textarea>
+                                </md-input-container>
+                            </form>
+                        </div>
+                    </md-content>
+
+
                 </md-content>
             </md-tab>
         </md-tabs>
