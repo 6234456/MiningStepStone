@@ -9,7 +9,12 @@
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.css">
     <style>
         * {
-        font-family: 'Roboto Condensed', sans-serif;
+            font-family: 'Roboto Condensed', sans-serif;
+        }
+
+        input, .md-select-value {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 14px;
         }
 
         .hint {
@@ -72,71 +77,84 @@
 
             <md-tab label="Bewerbung">
                 <md-content class="md-padding">
-                        <div>
-                            <form name="userForm">
+                    <div>
+                        <form id="userForm">
 
-                                <div layout-gt-sm="row">
-                                    <md-input-container class="md-block" flex-gt-sm>
-                                        <label>Title</label>
-                                        <input ng-model="current.name">
-                                    </md-input-container>
-
-                                    <md-input-container class="md-block" flex-gt-sm>
-                                        <label>Arbeitgeber</label>
-                                        <input ng-model="current.arbeitgeber">
-                                    </md-input-container>
-
-                                    <md-input-container class="md-block" flex-gt-sm>
-                                        <label>Strasse/Hausnummer</label>
-                                        <input ng-model="current.strasse">
-                                    </md-input-container>
-
-                                    <md-input-container class="md-block" flex-gt-sm>
-                                        <label>Stadt</label>
-                                        <input ng-model="current.stadt">
-                                    </md-input-container>
-                                    <md-input-container class="md-block" flex-gt-sm>
-                                        <label>Postal Code</label>
-                                        <input name="postalCode" ng-model="current.plz" placeholder="12345"
-                                               required ng-pattern="/^[0-9]{5}$/" md-maxlength="5">
-                                        <div ng-messages="userForm.postalCode.$error" role="alert" multiple>
-                                            <div ng-message="required" class="my-message">You must supply a postal code.</div>
-                                            <div ng-message="pattern" class="my-message">That doesn't look like a valid postal
-                                                code.
-                                            </div>
-                                            <div ng-message="md-maxlength" class="my-message">
-                                                Don't use the long version silly...we don't need to be that specific...
-                                            </div>
-                                        </div>
-                                    </md-input-container>
-                                </div>
-
-                                <div layout-gt-sm="row">
-                                    <md-input-container class="md-block" flex-gt-sm>
-                                        <label>Ansprechpartner</label>
-                                        <input ng-model="current.ansprechpartner" ng-disabled="anspr_disabled">
-                                    </md-input-container>
-                                    <md-input-container class="md-block" flex-gt-sm>
-                                        <label>Anrede</label>
-                                        <md-select ng-model="current.anrede" ng-change="checkAnspr()">
-                                            <md-option ng-repeat="i in anrede" value="{{i}}">{{i}}</md-option>
-                                        </md-select>
-                                    </md-input-container>
-                                    <md-input-container class="md-block" flex-gt-sm>
-                                        <label>Email</label>
-                                        <input ng-model="current.email" type="email" ng-disabled="!current.durch_email" >
-                                    </md-input-container>
-                                </div>
-
-                                <md-input-container class="md-block">
-                                    <label>Bemerkung</label>
-                                    <textarea ng-model="current.bemerkung" md-maxlength="150" rows="5" md-select-on-focus></textarea>
+                            <div layout-gt-sm="row">
+                                <md-input-container class="md-block"  flex="35">
+                                    <label>Title</label>
+                                    <input ng-model="current.name">
                                 </md-input-container>
-                            </form>
-                        </div>
-                    </md-content>
+
+                                <md-input-container class="md-block"  flex="30">
+                                    <label>Arbeitgeber</label>
+                                    <input ng-model="current.arbeitgeber">
+                                </md-input-container>
+
+                                <md-input-container class="md-block"  flex="15">
+                                    <label>Strasse/Hausnummer</label>
+                                    <input ng-model="current.strasse">
+                                </md-input-container>
+
+                                <md-input-container class="md-block"  flex="15">
+                                    <label>Stadt</label>
+                                    <input ng-model="current.stadt">
+                                </md-input-container>
+                                <md-input-container class="md-block"  flex="5">
+                                    <label>PLZ</label>
+                                    <input name="postalCode" ng-model="current.plz" placeholder="12345"
+                                           required ng-pattern="/^[0-9]{5}$/" md-maxlength="5">
+                                    <div ng-messages="userForm.postalCode.$error" role="alert" multiple>
+                                        <div ng-message="required" class="my-message">You must supply a postal code.</div>
+                                        <div ng-message="pattern" class="my-message">That doesn't look like a valid postal
+                                            code.
+                                        </div>
+                                        <div ng-message="md-maxlength" class="my-message">
+                                            Don't use the long version silly...we don't need to be that specific...
+                                        </div>
+                                    </div>
+                                </md-input-container>
+                            </div>
+
+                            <div layout-gt-sm="row">
+                                <md-input-container class="md-block"  flex="10">
+                                    <label>Ansprechpartner vor/nach</label>
+                                    <input ng-model="current.ansprechpartner" ng-disabled="anspr_disabled">
+                                </md-input-container>
+                                <md-input-container class="md-block"  flex="5">
+                                    <label>Anrede</label>
+                                    <md-select ng-model="current.anrede" ng-change="checkAnspr()">
+                                        <md-option ng-repeat="i in anrede" value="{{i}}">{{i}}</md-option>
+                                    </md-select>
+                                </md-input-container>
+                                <md-input-container class="md-block" flex="25">
+                                    <label>Email</label>
+                                    <input ng-model="current.email" type="email" ng-disabled="!current.durch_email" >
+                                </md-input-container>
+
+                                <md-input-container class="md-block" flex="20">
+                                    <label>Status</label>
+                                    <md-select ng-model="current.status_id">
+                                        <md-option ng-repeat="i in all_status" value="{{i.id}}">{{i.id + " " + i.beschreibung}}</md-option>
+                                    </md-select>
+                                </md-input-container>
+
+                                <md-input-container class="md-block" flex="40">
+                                    <label>Bemerkung</label>
+                                    <input ng-model="current.bemerkung" md-maxlength="150">
+                                </md-input-container>
 
 
+                            </div>
+
+                            <div layout-gt-sm="row">
+                                <md-input-container class="md-block" flex="5">
+                                    <md-button class="md-raised" ng-click="jobAnpassen($event)">Anpassen</md-button>
+                                </md-input-container>
+                            </div>
+
+                        </form>
+                    </div>
                 </md-content>
             </md-tab>
         </md-tabs>

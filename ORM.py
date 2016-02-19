@@ -9,6 +9,7 @@ Base = declarative_base()
 
 desc_status = '''
         100 - Unbeworben
+        101 - Gerade beworben, noch keine Bestätigung
 
         200 - Zusagen
         201 - zum Vorstellungsgespräche eingeladen
@@ -47,6 +48,12 @@ class Job(Base):
     strasse = Column(String)
     durch_email = Column(Boolean)
     email = Column(String)
+
+    anrede = Column(String, default=None)
+    ansprechpartner = Column(String, default=None)
+    ansp_vor = Column(String, default=None)
+    ansp_nach = Column(String, default=None)
+
     bemerkung = Column(String, default="")
     eintritt = Column(Boolean)
     gehalt = Column(Boolean)
@@ -63,10 +70,11 @@ class Job(Base):
     def toDict(self):
         d = {"id":self.id, "name":self.name, "url":self.url, "plz":self.plz, "stadt":self.stadt, "strasse": self.strasse,
              "durch_email":self.durch_email, "email":self.email, "bemerkung": self.bemerkung,
-             "entritt":self.eintritt, "gehalt" : self.gehalt, "status_id": self.status_id,
+             "eintritt":self.eintritt, "gehalt" : self.gehalt, "status_id": self.status_id,
              "status": self.status.beschreibung, "eingetragen_am": dateToString(self.eingetragen_am),
              "geloescht": self.geloescht, "geloescht_am": dateToString(self.geloescht_am),
-             "ag_id" : self.ag_id, "arbeitgeber" :self.arbeitgeber.name
+             "ag_id" : self.ag_id, "arbeitgeber" :self.arbeitgeber.name,
+             "anrede" : self.anrede, "ansprechpartner" : self.ansprechpartner, "ansp_vor": self.ansp_vor, "ansp_nach": self.ansp_nach
              }
         return d
 
@@ -137,20 +145,35 @@ class DBUtil:
         Base.metadata.create_all(self.engine)
 
         # init of status
-        l = []
-        for i in desc_status.split("\n"):
-            if len(i.strip()) > 0:
-                tmp = i.split("-")
-                l.append({'id': int(tmp[0].strip()), 'beschreibung': tmp[1].strip()})
+        l = self.process_StatusCode()
 
         self.openSession()
         self.session.add_all([Bewerbungsstatus(**i) for i in l])
         self.commit()
 
+    def process_StatusCode(self):
+        l = []
+        for i in desc_status.split("\n"):
+            if len(i.strip()) > 0:
+                tmp = i.split("-")
+                l.append({'id': int(tmp[0].strip()), 'beschreibung': tmp[1].strip()})
+        return l
 
     def openSession(self):
         if self.session is None:
             self.session = sessionmaker(bind=self.engine)()
+
+    def remove(self, id, clazz):
+        self.openSession()
+        self.session.query(clazz).filter(clazz.id==id).delete()
+
+    def update(self, id, clazz, obj):
+        self.openSession()
+        self.remove(id, clazz)
+        self.add(obj)
+
+    def byID(self, id, clazz):
+        return self.session.query(clazz).filter(clazz.id==id).one()
 
     def add_all(self, entry, adaptor):
         self.openSession()
@@ -184,7 +207,7 @@ if __name__ == '__main__':
     from extraction import mining
 
     db = DBUtil()
-    # db.initialize()
+    db.initialize()
 
     db.add_all(mining('http://www.stepstone.de/stellenangebote--Service-Manager-Telekommunikation-m-w-Frankfurt-am-Main-China-Telecom-Deutschland-GmbH--3661181-inline.html'),entryAdapter)
     db.commit()
