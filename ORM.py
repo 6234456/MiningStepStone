@@ -49,6 +49,9 @@ class Job(Base):
     status = relationship("Bewerbungsstatus", backref=backref('jobs', order_by=id))
     eingetragen_am = Column(DateTime)
 
+    geloescht = Column(Boolean, default=False)
+    geloescht_am = Column(DateTime, default=None)
+
     arbeitgeber = relationship("Arbeitgeber", backref=backref('jobs', order_by=id))
     ag_id = Column(Integer, ForeignKey('arbeitgeber.id'))
 
@@ -136,7 +139,20 @@ class DBUtil:
 
     def add_all(self, entry, adaptor):
         self.openSession()
-        self.session.add_all(adaptor(entry))
+
+        # integrity check
+        obj = adaptor(entry)
+        ag_count = self.session.query(Arbeitgeber).filter(Arbeitgeber.id == obj[1].id).count()
+        if ag_count == 0:
+            self.session.add_all(obj)
+        else:
+            job_count = self.session.query(Job).filter(Job.id == obj[0].id).count()
+            if job_count == 0:
+                self.session.add(obj[0])
+            elif job_count == 1 and obj[0].geloescht:
+                obj[0].geloescht = False
+                obj[0].geloescht_am = None
+                self.session.add(obj[0])
 
     def add(self, obj):
         self.openSession()
@@ -155,5 +171,5 @@ if __name__ == '__main__':
     db = DBUtil()
     # db.initialize()
 
-    db.add_all(mining('http://www.stepstone.de/stellenangebote--Financial-Controller-m-w-Waldaschaff-bei-Aschaffenburg-Waldaschaff-Automotive-GmbH--3597707-inline.html'),entryAdapter)
+    db.add_all(mining('http://www.stepstone.de/stellenangebote--Assistent-im-Bereich-Marketing-Communications-m-w-Heilbronn-GGB-Heilbronn-GmbH--3651790-inline.html'),entryAdapter)
     db.commit()

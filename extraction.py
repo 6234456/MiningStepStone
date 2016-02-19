@@ -37,7 +37,7 @@ def mining(url):
     obj = loads("".join(targStr))
 
     # dict to hold the info
-    info = {"jobID":obj['stst']['listing']['listingid'] , "url": url, "arbeitgeber":obj['stst']['company']['companyname'], "plz": obj['stst']['listing']['zipcode'], "stadt":obj['stst']['listing']['cityname'],"job":obj['stst']['listing']['title'], "istDurchEmail": obj['stst']['listing']['applyform']['type'] == "email", "agID":obj['stst']['company']['companyid'] }
+    info = {"jobID":obj['stst']['listing']['listingid'] , "url": url, "arbeitgeber":obj['stst']['company']['companyname'].strip(), "plz": obj['stst']['listing']['zipcode'], "stadt":obj['stst']['listing']['cityname'],"job":obj['stst']['listing']['title'], "istDurchEmail": obj['stst']['listing']['applyform']['type'] == "email", "agID":obj['stst']['company']['companyid'] }
 
     info['email'] = None
     info['strasse'] = None
