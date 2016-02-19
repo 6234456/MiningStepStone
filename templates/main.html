@@ -11,6 +11,19 @@
         * {
         font-family: 'Roboto Condensed', sans-serif;
         }
+
+        .hint {
+        /* Position the hint */
+        position: absolute;
+        left: 2px;
+        right: auto;
+        bottom: 7px;
+        /* Copy styles from ng-messages */
+        font-size: 12px;
+        line-height: 14px;
+        transition: all 0.3s cubic-bezier(0.55, 0, 0.55, 0.2);
+        /* Set our own color */
+        color: grey; }
     </style>
 </head>
 <body ng-app="myapp" ng-cloak>
@@ -18,29 +31,51 @@
   Your HTML content here
 -->
 
+
+
 <div ng-controller="AppCtrl" ng-cloak>
     <md-content>
-        <md-list>
-            <md-subheader class="md-no-sticky">{{cnt}}</md-subheader>
-            <div ng-repeat="item in data">
-                <md-list-item class="md-3-line" layout="row">
-                    <div class="md-list-item-text" layout="column">
-                        <h3><a ng-href="{{item.url}}">{{ item.name }}</a></h3>
-                        <p>{{ item.arbeitgeber }}</p>
-                        <p><span>{{ item.plz }} </span><span>{{ item.stadt }}</span></p>
-                    </div>
-                    <div class="md-secondary">
-                        {{ item.status }}
-                    </div>
-                </md-list-item>
-                <md-divider></md-divider>
-            </div>
-        </md-list>
+        <md-tabs md-dynamic-height md-border-bottom>
+            <md-tab label="Übersicht">
+                <md-content class="md-padding">
+                    <md-list>
+                        <md-subheader class="md-no-sticky">{{cnt}}</md-subheader>
+                        <div ng-repeat="item in data">
+                            <md-list-item class="md-3-line" layout="row">
+                                <div class="md-list-item-text" layout="column">
+                                    <h3><a ng-href="{{item.url}}">{{ item.name }}</a></h3>
+                                    <p>{{ item.arbeitgeber }}</p>
+                                    <p><span>{{ item.plz }} </span><span>{{ item.stadt }}</span></p>
+                                </div>
+                                <div class="md-secondary">
+                                    {{ item.status }}
+                                </div>
+                            </md-list-item>
+                            <md-divider></md-divider>
+                        </div>
+                    </md-list>
+                </md-content>
+            </md-tab>
+            <md-tab label="Neue Stelle">
+                <md-content class="md-padding">
+
+                    <md-input-container class="md-block" flex-gt-sm>
+                        <label>URL</label>
+                        <input name="url" ng-model="queryURL" ng-keyup="submitNewURLQuery($event)"/>
+                        <div class="hint">Bitte URL hier hinzufügen!</div>
+                    </md-input-container>
+
+                </md-content>
+            </md-tab>
+            <md-tab label="three">
+                <md-content class="md-padding">
+                    <h1 class="md-display-2">Tab Three</h1>
+                    <p>Integer turpis erat, porttitor vitae mi faucibus, laoreet interdum tellus. Curabitur posuere molestie dictum. Morbi eget congue risus, quis rhoncus quam. Suspendisse vitae hendrerit erat, at posuere mi. Cras eu fermentum nunc. Sed id ante eu orci commodo volutpat non ac est. Praesent ligula diam, congue eu enim scelerisque, finibus commodo lectus.</p>
+                </md-content>
+            </md-tab>
+        </md-tabs>
     </md-content>
 </div>
-
-
-
 
 {% endraw %}
 

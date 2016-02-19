@@ -116,5 +116,5 @@ def __processStr(string, info, email, strasse):
         info['strasse'] = strasse.findall(string)[0][0].strip()
 
 if __name__ == "__main__":
-    url = r"http://www.stepstone.de/stellenangebote--Controller-in-Neuss-Masterwork-Machinery-GmbH--3628963-inline.html"
+    url = r"http://www.stepstone.de/stellenangebote--Sales-Coordinator-BMW-m-w-Eislingen-Fils-Continental-AG--3631616-inline.html"
     print(mining(url))
