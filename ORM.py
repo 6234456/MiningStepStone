@@ -30,6 +30,11 @@ desc_status = '''
         503 - Ausschreibung zurückgezogen
         504 - Absagen
     '''
+def dateToString(d):
+    if d is None:
+        return None
+
+    return d.strftime("%Y-%m-%d %H:%M:%S")
 
 class Job(Base):
     __tablename__ = 'job'
@@ -54,6 +59,16 @@ class Job(Base):
 
     arbeitgeber = relationship("Arbeitgeber", backref=backref('jobs', order_by=id))
     ag_id = Column(Integer, ForeignKey('arbeitgeber.id'))
+
+    def toDict(self):
+        d = {"id":self.id, "name":self.name, "url":self.url, "plz":self.plz, "stadt":self.stadt,
+             "durch_email":self.durch_email, "email":self.email, "bemerkung": self.bemerkung,
+             "entritt":self.eintritt, "gehalt" : self.gehalt, "status_id": self.status_id,
+             "status": self.status.beschreibung, "eingetragen_am": dateToString(self.eingetragen_am),
+             "geloescht": self.geloescht, "geloescht_am": dateToString(self.geloescht_am),
+             "ag_id" : self.ag_id, "arbeitgeber" :self.arbeitgeber.name
+             }
+        return d
 
 class Bewerbungsstatus(Base):
     __tablename__ = "status"
@@ -171,5 +186,5 @@ if __name__ == '__main__':
     db = DBUtil()
     # db.initialize()
 
-    db.add_all(mining('http://www.stepstone.de/stellenangebote--Assistent-im-Bereich-Marketing-Communications-m-w-Heilbronn-GGB-Heilbronn-GmbH--3651790-inline.html'),entryAdapter)
+    db.add_all(mining('http://www.stepstone.de/stellenangebote--Service-Manager-Telekommunikation-m-w-Frankfurt-am-Main-China-Telecom-Deutschland-GmbH--3661181-inline.html'),entryAdapter)
     db.commit()
