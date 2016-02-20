@@ -10,10 +10,10 @@
 
         $scope.chooseProgrBarClass = function(i){
             if(i <= 40)
-                return "md-warn";
+                return "md-accent";
 
             if(i <= 75)
-                return "md-accent";
+                return "md-warn";
 
             return "md-primary";
         }
@@ -57,6 +57,35 @@
                                 .hideDelay(3000)
                             );
                         }
+                    );
+                }
+            );
+        }
+
+        $scope.doku = function(ev){
+            $http({
+                      method : "POST",
+                      url : "/doku",
+                      data : JSON.stringify({targ: $scope.current.id}),
+                      headers : {
+                            "Content-Type" : "application/json"
+                      }
+                  }
+                ).then(function(response) {
+                    if(response.data.trim() == "OK"){
+                        $mdToast.show(
+                          $mdToast.simple()
+                            .textContent('OK')
+                            .position("bottom right")
+                            .hideDelay(3000)
+                        );
+                    }
+                }, function(){
+                    $mdToast.show(
+                      $mdToast.simple()
+                        .textContent('Ein Fehler tritt auf!.')
+                        .position("bottom right")
+                        .hideDelay(3000)
                     );
                 }
             );
