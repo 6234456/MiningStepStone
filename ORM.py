@@ -124,6 +124,11 @@ def entryAdapter(info):
     j.durch_email = info['istDurchEmail']
     j.email = info['email']
 
+    j.anrede = info['anrede']
+    j.ansprechpartner = info['ansprechpartner']
+    j.ansp_vor = info['ansp_vor']
+    j.ansp_nach = info['ansp_nach']
+
     j.eingetragen_am = datetime.datetime.now()
 
     a = Arbeitgeber()

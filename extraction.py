@@ -38,12 +38,24 @@ def mining(url):
     obj = loads("".join(targStr))
 
     # dict to hold the info
-    info = {"jobID":obj['stst']['listing']['listingid'] , "url": url, "arbeitgeber":obj['stst']['company']['companyname'].strip(), "plz": obj['stst']['listing']['zipcode'].strip(), "stadt":obj['stst']['listing']['cityname'].strip() or obj['stst']['listing']['locationname'].strip()
+    info = {"jobID":obj['stst']['listing']['listingid'] , "url": url, "arbeitgeber":obj['stst']['company']['companyname'].strip()
         ,"job":obj['stst']['listing']['title'].strip(), "istDurchEmail": obj['stst']['listing']['applyform']['type'] == "email", "agID":obj['stst']['company']['companyid'] }
 
     info['email'] = None
     info['strasse'] = None
+    info['stadt'] = None
+    info['plz'] = None
+
+    tempPlz = obj['stst']['listing']['zipcode'].strip()
+    tempStadt = obj['stst']['listing']['locationname'].strip() or obj['stst']['listing']['cityname'].strip()
+
+    # the url of content frame
+    # http://www.stepstone.de/?event=OfferView.dspOfferViewHtml&offerId={jobID}
+    url_iframe = "http://www.stepstone.de/?event=OfferView.dspOfferViewHtml&offerId={0}".format(info['jobID'])
     url_main = soup.select_one("iframe")['src']
+    if not ("www.stepstone.de" in url_main):
+        url_main = url_iframe
+
 
     # step 1.5
     # http://www.stepstone.de/stellenangebote-des-unternehmens--{name_mit_bindstrich}--{id}.html
@@ -61,40 +73,40 @@ def mining(url):
     content = requests.post(url_main, headers=headers)
     soup = bs4.BeautifulSoup(content.content.decode('utf-8'), "lxml")
 
+
     # TODO there might be rare cases that strasse can not match for example Zur Aue 2
-    # TODO match the Ansprechpartner, maybe based on the position
+    # TODO match the Ansprechpartner ohne Anrede
     strasse = compile(r"([\w-]+\s?(Platz|Str\.|Straße|Allee|Weg|Ring)\s+\d+)", IGNORECASE)
     email = compile(r"[\w.-]+@[\w.-]+")
     # in some rare cases plz missing
-    plzstadt = compile(r"(D-|d-)?(\d{5})\s+[A-ZÄÖÜ][a-zA-ZöäüÖÄÜ\s]+\b")
+    plzstadt = compile(r"(D-|d-)?(\d{5})\s+([A-ZÄÖÜ][a-zöäü]+)")
 
-    # first kind of template contains id "company-continfo"
-    continfo = soup.select_one("#company-continfo")
+    # first kind of template contains id "company-continfo" -> not reliable
+    # continfo = soup.select_one("#company-continfo")
 
-    if continfo:
-        for string in continfo.stripped_strings:
-            __processStr(string, info, email, strasse, plzstadt)
-    else:
-        # loop through the whole dom, but in reversed order -> contact info always at the bottom
-        elems = list(soup.select_one("body").stripped_strings)
+    # loop through the whole dom, but in reversed order -> contact info always at the bottom
 
-        for i in range(len(elems)-1, -1, -1):
-            if info['istDurchEmail']:
-                if info['email'] and info['strasse']:
-                    break
-            else:
-                if info['strasse']:
-                    break
+    # to record the index position of email
+    pos = {"email": None, "plz": None}
 
-            __processStr(elems[i], info, email, strasse, plzstadt)
+    elems = list(soup.select_one("body").stripped_strings)
+
+    for i in range(len(elems)-1, -1, -1):
+        if info['istDurchEmail']:
+            if info['email'] and info['strasse'] and info['plz']:
+                break
+        else:
+            if info['strasse'] and info['plz']:
+                break
+
+        __processStr(elems[i], info, email, strasse, plzstadt, pos, i)
 
     # search for Gehaltsvorstellung and Eintrittstermin/Kündigungsfrist
     info['gehaltsvorstellung'] = False
     info['eintrittstermin'] = False
-    eintrittstermin = compile(r"Eintrittstermin|Kündigungsfrist", IGNORECASE)
+    eintrittstermin = compile(r"Eintrittstermin|Kündigungsfrist|Einstiegsdatum", IGNORECASE)
     gehaltsvorstellung = compile(r"Gehaltsvorstellung", IGNORECASE)
 
-    elems = list(soup.select_one("body").stripped_strings)
     for i in range(len(elems)-1, -1, -1):
         if info['gehaltsvorstellung'] and info['eintrittstermin']:
             break
@@ -105,25 +117,66 @@ def mining(url):
         if not info['eintrittstermin'] and eintrittstermin.search(elems[i]):
             info['eintrittstermin'] = True
 
-
+    # if the stree not found, use the one registered on the employer info
     if info['strasse'] is None:
         info['strasse'] = tempStrasse
-    elif SequenceMatcher(None, info['strasse'], tempStrasse).ratio() > 0.8:
+    # if the stree exists, but resembles to the one on the registration, change to the latter
+    elif tempStrasse and SequenceMatcher(None, info['strasse'], tempStrasse).ratio() > 0.8:
         info['strasse'] = tempStrasse
+
+    if info['plz'] is None:
+        info['plz'] = tempPlz
+        info['stadt'] = tempStadt
+    elif tempStadt and SequenceMatcher(None, info['stadt'], tempStadt).ratio() > 0.7:
+        info['stadt'] = tempStadt
+
+    # search for ansprechpartner
+    info['anrede'] = None
+    info['ansprechpartner'] = None
+    info['ansp_vor'] = None
+    info['ansp_nach'] = None
+
+    ansp = compile("((Herr|Herrn|Frau)\s)(([A-ZÄÖÜ][a-zöäü]+\s)?(von\s)?[A-ZÄÖÜ][a-zöäü]+)")
+
+
+    search_start = pos['plz'] or pos['email'] or len(elems)-1
+
+    for i in range(search_start, -1, -1):
+        if ansp.search(elems[i]):
+            tmp = ansp.findall(elems[i])[0]
+
+            info['ansprechpartner'] = tmp[2]
+
+
+            if not (" " in tmp[2]):
+                info['ansp_vor'], info['ansp_nach'] = "", tmp[2]
+            else:
+                info['ansp_vor'], info['ansp_nach'] = tmp[2].split(" ")
+
+            if tmp[1]:
+                if tmp[1] == "Frau":
+                    info['anrede'] = "F"
+                else:
+                    info['anrede'] = "M"
+            break
+
 
     return info
 
 
-def __processStr(string, info, email, strasse, plzstadt):
+def __processStr(string, info, email, strasse, plzstadt, pos, i):
     if info['istDurchEmail'] and "@" in string:
         info["email"] = email.findall(string)[0].strip()
+        pos['email'] = i
 
     if strasse.search(string):
         info['strasse'] = strasse.findall(string)[0][0].strip()
 
     if not info['plz'] and plzstadt.search(string):
+        pos['plz'] = i
         info['plz'] = plzstadt.findall(string)[0][1].strip()
+        info['stadt'] = plzstadt.findall(string)[0][2].strip()
 
 if __name__ == "__main__":
-    url = r"http://www.stepstone.de/stellenangebote--Sales-Coordinator-BMW-m-w-Eislingen-Fils-Continental-AG--3631616-inline.html"
+    url = r"http://www.stepstone.de/stellenangebote--Business-Partner-Functional-Controlling-w-m-Dortmund-WILO-SE--3663586-inline.html"
     print(mining(url))
