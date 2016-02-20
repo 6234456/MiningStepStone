@@ -5,7 +5,7 @@ Web-GUI to
 Database IO
 '''
 
-from json import dumps, loads
+from json import dumps
 from flask import Flask, render_template, request
 from ORM import DBUtil, Job, Arbeitgeber, Bewerbungsstatus, StatutsVeraenderung, entryAdapter
 from extraction import mining
@@ -40,7 +40,8 @@ def add():
 @app.route("/change", methods=['POST'])
 def change():
     db.openSession()
-    job = loads(request.form.get('job'))
+    job = request.get_json()
+
     del job['status']
     del job['arbeitgeber']
 

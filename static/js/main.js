@@ -76,9 +76,9 @@
                     $http({
                               method : "POST",
                               url : "/change",
-                              data : "job=" + JSON.stringify($scope.current),
+                              data : JSON.stringify($scope.current),
                               headers : {
-                                    "Content-Type" : "application/x-www-form-urlencoded"
+                                    "Content-Type" : "application/json"
                               }
                           }
                         ).then(function(response) {

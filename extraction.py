@@ -4,6 +4,7 @@ import bs4
 import requests
 from json import loads
 from re import compile, IGNORECASE
+from difflib import SequenceMatcher
 
 # iframe element loads the separate page which contains the critical info
 # 1.   fetch the raw page, parse the json string
@@ -37,7 +38,8 @@ def mining(url):
     obj = loads("".join(targStr))
 
     # dict to hold the info
-    info = {"jobID":obj['stst']['listing']['listingid'] , "url": url, "arbeitgeber":obj['stst']['company']['companyname'].strip(), "plz": obj['stst']['listing']['zipcode'], "stadt":obj['stst']['listing']['cityname'],"job":obj['stst']['listing']['title'], "istDurchEmail": obj['stst']['listing']['applyform']['type'] == "email", "agID":obj['stst']['company']['companyid'] }
+    info = {"jobID":obj['stst']['listing']['listingid'] , "url": url, "arbeitgeber":obj['stst']['company']['companyname'].strip(), "plz": obj['stst']['listing']['zipcode'].strip(), "stadt":obj['stst']['listing']['cityname'].strip() or obj['stst']['listing']['locationname'].strip()
+        ,"job":obj['stst']['listing']['title'].strip(), "istDurchEmail": obj['stst']['listing']['applyform']['type'] == "email", "agID":obj['stst']['company']['companyid'] }
 
     info['email'] = None
     info['strasse'] = None
@@ -63,13 +65,15 @@ def mining(url):
     # TODO match the Ansprechpartner, maybe based on the position
     strasse = compile(r"([\w-]+\s?(Platz|Str\.|Straße|Allee|Weg|Ring)\s+\d+)", IGNORECASE)
     email = compile(r"[\w.-]+@[\w.-]+")
+    # in some rare cases plz missing
+    plzstadt = compile(r"(D-|d-)?(\d{5})\s+[A-ZÄÖÜ][a-zA-ZöäüÖÄÜ\s]+\b")
 
     # first kind of template contains id "company-continfo"
     continfo = soup.select_one("#company-continfo")
 
     if continfo:
         for string in continfo.stripped_strings:
-            __processStr(string, info, email, strasse)
+            __processStr(string, info, email, strasse, plzstadt)
     else:
         # loop through the whole dom, but in reversed order -> contact info always at the bottom
         elems = list(soup.select_one("body").stripped_strings)
@@ -82,7 +86,7 @@ def mining(url):
                 if info['strasse']:
                     break
 
-            __processStr(elems[i], info, email, strasse)
+            __processStr(elems[i], info, email, strasse, plzstadt)
 
     # search for Gehaltsvorstellung and Eintrittstermin/Kündigungsfrist
     info['gehaltsvorstellung'] = False
@@ -104,16 +108,21 @@ def mining(url):
 
     if info['strasse'] is None:
         info['strasse'] = tempStrasse
+    elif SequenceMatcher(None, info['strasse'], tempStrasse).ratio() > 0.8:
+        info['strasse'] = tempStrasse
 
     return info
 
 
-def __processStr(string, info, email, strasse):
+def __processStr(string, info, email, strasse, plzstadt):
     if info['istDurchEmail'] and "@" in string:
         info["email"] = email.findall(string)[0].strip()
 
     if strasse.search(string):
         info['strasse'] = strasse.findall(string)[0][0].strip()
+
+    if not info['plz'] and plzstadt.search(string):
+        info['plz'] = plzstadt.findall(string)[0][1].strip()
 
 if __name__ == "__main__":
     url = r"http://www.stepstone.de/stellenangebote--Sales-Coordinator-BMW-m-w-Eislingen-Fils-Continental-AG--3631616-inline.html"
