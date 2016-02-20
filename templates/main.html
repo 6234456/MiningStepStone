@@ -52,10 +52,11 @@
                                     <div ng-click="selectItem($index)">
                                         <p>{{ item.arbeitgeber }}</p>
                                         <p><span>{{ item.plz }} </span><span>{{ item.stadt }}</span></p>
+                                        <md-progress-linear md-mode="determinate" value="{{item.bewertung}}" class="{{chooseProgrBarClass(item.bewertung)}}"></md-progress-linear>
                                     </div>
                                 </div>
                                 <div class="md-secondary">
-                                    {{ item.status }}
+                                    <span ng-click="deleteItem($index)">{{ item.status }}</span>
                                 </div>
                             </md-list-item>
                             <md-divider></md-divider>
@@ -139,7 +140,12 @@
                                     </md-select>
                                 </md-input-container>
 
-                                <md-input-container class="md-block" flex="40">
+                                <md-input-container class="md-block" flex="5">
+                                    <label>Bewertung (1-100)</label>
+                                    <input ng-model="current.bewertung">
+                                </md-input-container>
+
+                                <md-input-container class="md-block" flex="35">
                                     <label>Bemerkung</label>
                                     <input ng-model="current.bemerkung" md-maxlength="150">
                                 </md-input-container>

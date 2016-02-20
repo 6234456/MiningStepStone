@@ -8,6 +8,60 @@
 
         var tmpAnspr = ""
 
+        $scope.chooseProgrBarClass = function(i){
+            if(i <= 40)
+                return "md-warn";
+
+            if(i <= 75)
+                return "md-accent";
+
+            return "md-primary";
+        }
+
+        $scope.deleteItem = function(i){
+            $mdDialog.show(
+              $mdDialog.confirm()
+                .parent(angular.element(document.querySelector('body')))
+                .clickOutsideToClose(true)
+                .title('Warnung')
+                .textContent('Die Eingabe zu löschen?')
+                .ok('OK')
+                .cancel('Canel')
+//                .targetEvent(ev)
+            ).then(
+                function(){
+                    $http({
+                              method : "POST",
+                              url : "/delete",
+                              data : JSON.stringify({targ: $scope.data[i].id}),
+                              headers : {
+                                    "Content-Type" : "application/json"
+                              }
+                          }
+                        ).then(function(response) {
+                            refresh();
+                            $scope.activeTabNr = 0;
+                            if(response.data.trim() == "OK"){
+                                $mdToast.show(
+                                  $mdToast.simple()
+                                    .textContent('OK')
+                                    .position("bottom right")
+                                    .hideDelay(3000)
+                                );
+                            }
+                        }, function(){
+                            $mdToast.show(
+                              $mdToast.simple()
+                                .textContent('Ein Fehler tritt auf! Löschen ohne Erfolg.')
+                                .position("bottom right")
+                                .hideDelay(3000)
+                            );
+                        }
+                    );
+                }
+            );
+        }
+
         $scope.checkAnspr = function(){
             if($scope.current.anrede == $scope.anrede[0]){
                 tmpAnspr = $scope.current.ansprechpartner;

@@ -1,5 +1,9 @@
 # -*- coding: <utf-8> -*-
 
+# author:    Qiou Yang
+# email:     sgfxqw@gmail.com
+# desc:      to extract all the relevant information from a stepstone page for the job application
+
 import bs4
 import requests
 from json import loads

@@ -1,5 +1,9 @@
 # -*- coding: <utf-8> -*-
 
+# author:    Qiou Yang
+# email:     sgfxqw@gmail.com
+# desc:      ORM-Model and the persistence through DB
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, create_engine, DateTime
 from sqlalchemy.orm import sessionmaker, relationship, backref
@@ -64,6 +68,8 @@ class Job(Base):
     geloescht = Column(Boolean, default=False)
     geloescht_am = Column(DateTime, default=None)
 
+    bewertung = Column(Integer,default=0)
+
     arbeitgeber = relationship("Arbeitgeber", backref=backref('jobs', order_by=id))
     ag_id = Column(Integer, ForeignKey('arbeitgeber.id'))
 
@@ -73,7 +79,7 @@ class Job(Base):
              "eintritt":self.eintritt, "gehalt" : self.gehalt, "status_id": self.status_id,
              "status": self.status.beschreibung, "eingetragen_am": dateToString(self.eingetragen_am),
              "geloescht": self.geloescht, "geloescht_am": dateToString(self.geloescht_am),
-             "ag_id" : self.ag_id, "arbeitgeber" :self.arbeitgeber.name,
+             "ag_id" : self.ag_id, "arbeitgeber" :self.arbeitgeber.name, "bewertung" : self.bewertung,
              "anrede" : self.anrede, "ansprechpartner" : self.ansprechpartner, "ansp_vor": self.ansp_vor, "ansp_nach": self.ansp_nach
              }
         return d
@@ -214,5 +220,5 @@ if __name__ == '__main__':
     db = DBUtil()
     db.initialize()
 
-    db.add_all(mining('http://www.stepstone.de/stellenangebote--Service-Manager-Telekommunikation-m-w-Frankfurt-am-Main-China-Telecom-Deutschland-GmbH--3661181-inline.html'),entryAdapter)
+    db.add_all(mining('http://www.stepstone.de/stellenangebote--Business-Partner-Functional-Controlling-w-m-Dortmund-WILO-SE--3663586-inline.html'),entryAdapter)
     db.commit()

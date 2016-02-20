@@ -1,13 +1,13 @@
 # -*- coding: <utf-8> -*-
 
-'''
-Web-GUI to
-Database IO
-'''
+
+# author:    Qiou Yang
+# email:     sgfxqw@gmail.com
+# desc:      Web-GUI to interact with user
 
 from json import dumps
 from flask import Flask, render_template, request
-from ORM import DBUtil, Job, Arbeitgeber, Bewerbungsstatus, StatutsVeraenderung, entryAdapter
+from ORM import DBUtil, Job, StatutsVeraenderung, entryAdapter
 from extraction import mining
 import datetime
 
@@ -56,6 +56,23 @@ def change():
     db.add(Job(**job))
 
     db.commit()
+    return "OK"
+
+@app.route("/delete", methods=['POST'])
+def delete():
+    db.openSession()
+    targ = request.get_json()
+
+    obj = db.session.query(Job).filter(Job.id==targ['targ']).one()
+
+    if obj:
+        obj.geloescht = True
+        obj.geloescht_am = datetime.datetime.now()
+
+        db.commit()
+    else:
+        return "Fail"
+
     return "OK"
 
 if __name__ == "__main__":
