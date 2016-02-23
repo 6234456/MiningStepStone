@@ -10,8 +10,9 @@ from flask import Flask, render_template, request
 from ORM import DBUtil, Job, StatutsVeraenderung, entryAdapter
 from extraction import mining
 from docTemplateEngine import render
+import emailUtil
 import datetime
-import re
+import re, os
 
 app = Flask(__name__)
 db = DBUtil()
@@ -60,6 +61,29 @@ def change():
     db.commit()
     return "OK"
 
+@app.route("/send", methods=['POST'])
+def send():
+    db.openSession()
+    targ = request.get_json()
+
+    obj = db.session.query(Job).filter(Job.id==targ['targ']).one()
+    if obj:
+        # set status to 101
+        print(obj.status_id)
+        print(type(obj.status_id))
+        if obj.status_id == 100:
+            obj.status_id = 101
+
+        # generate doku
+        __prepareDoku(obj)
+
+        # send email
+        emailUtil.send("sgfxqw@gmail.com","xxxxxx", obj.email.strip(), "Bewerbung um eine Arbeitsplatz als " + obj.name, "Demo Text"
+             ,[re.sub("[\$\\\/\-\&]", "_", obj.arbeitgeber.name)+"/Anschreiben_Qiou Yang.docx", "common/Bewerbungsmappe_Qiou Yang.pdf"])
+        db.commit()
+
+    return "OK"
+
 @app.route("/delete", methods=['POST'])
 def delete():
     db.openSession()
@@ -83,7 +107,12 @@ def doku():
     targ = request.get_json()
     obj = db.session.query(Job).filter(Job.id==targ['targ']).one()
 
+    __prepareDoku(obj)
 
+    return "OK"
+
+
+def __prepareDoku(obj):
     # prepare the info to fill in the template
     anrede_dict = {
         'M' : ['Herr', 'Sehr geehrter Herr'],
@@ -114,11 +143,15 @@ def doku():
         td = datetime.date.today()
         d['date'] = str(td.day) + "." + monthName[td.month] + " " + str(td.year)
 
-        render(d, "tmpl.docx", re.sub("[\$\\\/\-\&]", "_", obj.arbeitgeber.name)+".docx")
-    else:
-        return "Fail"
+        # generate file in the path
+        pName = re.sub("[\$\\\/\-\&]", "_", obj.arbeitgeber.name)
 
-    return "OK"
+        if not os.path.isdir(pName):
+            os.mkdir(pName)
+
+        render(d, "demo.docx", pName +"/Anschreiben_Qiou Yang.docx")
+    else:
+        raise TypeError
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

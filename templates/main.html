@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <title>Dashboard</title>
     <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.css">
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.5/angular-material.min.css">
     <style>
         * {
             font-family: 'Roboto Condensed', sans-serif;
@@ -16,6 +16,11 @@
             font-family: 'Roboto Condensed', sans-serif;
             font-size: 14px;
         }
+
+        md-toolbar:not(.md-menu-toolbar) md-icon {
+        color: rgb(255, 255, 255) !important;
+        }
+
 
         .hint {
         /* Position the hint */
@@ -38,14 +43,38 @@
 
 
 
-<div ng-controller="AppCtrl" ng-cloak>
+<div ng-controller="AppCtrl">
     <md-content>
         <md-tabs md-dynamic-height md-border-bottom md-selected="activeTabNr">
             <md-tab label="Übersicht">
                 <md-content class="md-padding">
                     <md-list>
-                        <md-subheader class="md-no-sticky">{{cnt}}</md-subheader>
-                        <div ng-repeat="item in data track by $index">
+                        <md-toolbar>
+                            <div class="md-toolbar-tools" style="background:#eee;border-bottom: 1px black dashed">
+
+                                <span style="font-size:80%;color:#000">{{cnt}}</span>
+
+                                <span flex></span>
+
+                                <md-input-container class="md-toolbar-tools-bottom" style="line-height:0.1;vertical-align: bottom;font-size:70%">
+                                    <input ng-model="searchKey" placeholder="Suchen" ng-keyup="updateSearchCnt()">
+                                </md-input-container>
+
+                                <md-button class="md-icon-button" aria-label="filter" ng-click="resetSearch()">
+                                    {% endraw %}
+                                    <md-icon md-svg-src="{{ url_for('static', filename='icons/swap.svg') }}" ></md-icon>
+                                    {% raw %}
+                                </md-button>
+
+                                <md-button class="md-icon-button" aria-label="sort">
+                                    {% endraw %}
+                                    <md-icon md-svg-src="{{ url_for('static', filename='icons/import.svg') }}"></md-icon>
+                                    {% raw %}
+                                </md-button>
+                            </div>
+                        </md-toolbar>
+
+                        <div ng-repeat="item in filtered = (data | filter : searchKey)">
                             <md-list-item class="md-3-line" layout="row">
                                 <div class="md-list-item-text" layout="column">
                                     <h3><a ng-href="{{item.url}}">{{ item.name }}</a></h3>
@@ -162,12 +191,17 @@
                             <md-divider></md-divider>
 
                             <div layout-gt-sm="row">
-                                <md-input-container class="md-block" flex="5">
+
+                                <md-input-container class="md-block" flex="10">
                                     <md-button class="md-raised" ng-click="doku($event)">Doku bereitstellen</md-button>
                                 </md-input-container>
                             </div>
 
-
+                            <div layout-gt-sm="row">
+                                <md-input-container class="md-block" flex="10">
+                                    <md-button class="md-raised" ng-click="email($event)">{{email_status}}</md-button>
+                                </md-input-container>
+                            </div>
 
                         </form>
                     </div>
@@ -183,13 +217,13 @@
 
 
 <!-- Angular Material requires Angular.js Libraries -->
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.min.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.min.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-messages.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular-animate.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular-aria.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular-messages.min.js"></script>
 
 <!-- Angular Material Library -->
-<script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.5/angular-material.min.js"></script>
 
 <!-- Your application bootstrap  -->
 <script type="text/javascript" src="{{ url_for('static', filename='js/main.js') }}">

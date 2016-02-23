@@ -6,6 +6,18 @@
         $scope.anspr_disabled = false;
         $scope.activeTabNr = 0;
 
+        $scope.updateSearchCnt = function(){
+            var tmp = $scope.filtered.length;
+            $scope.data = $scope.filtered;
+            $scope.cnt = tmp === 0?"keine aktive Stelle":tmp === 1 ? "Eine aktive Stelle" : "Insgesamt "+tmp + " Stellen";
+        };
+
+        $scope.resetSearch = function(){
+            $scope.data = $scope.dataBackup;
+            $scope.searchKey = "";
+            $scope.cnt = $scope.cntBackup;
+        }
+
         var tmpAnspr = ""
 
         $scope.chooseProgrBarClass = function(i){
@@ -62,6 +74,89 @@
             );
         }
 
+        $scope.email = function(ev){
+
+            if(!$scope.current.durch_email){
+                $mdDialog.show(
+                  $mdDialog.confirm()
+                    .parent(angular.element(document.querySelector('body')))
+                    .clickOutsideToClose(true)
+                    .title('Warnung')
+                    .textContent('Email-Feld zu aktivieren?')
+                    .ok('OK')
+                    .cancel('Canel')
+                ).then(
+                    function(){
+                        $scope.current.durch_email = true;
+                        $scope.email_status = "Direkt zumailen";
+                    }
+                );
+
+                return ;
+            }
+
+
+            $mdDialog.show(
+              $mdDialog.confirm()
+                .parent(angular.element(document.querySelector('body')))
+                .clickOutsideToClose(true)
+                .title('Warnung')
+                .textContent('Nicht gespeicherte Anpassungen gehen verloren.')
+                .ok('Los!')
+                .cancel('Canel')
+                .targetEvent(ev)
+            ).then(
+                function(){
+                    var cancel = false;
+
+                    if($scope.current.status_id !== 100){
+                        $mdDialog.show(
+                          $mdDialog.confirm()
+                            .parent(angular.element(document.querySelector('body')))
+                            .clickOutsideToClose(true)
+                            .title('Warnung')
+                            .textContent('Du hast dich bereits darum beworben.Nochmal?')
+                            .ok('Ja!')
+                            .cancel('Canel')
+                            .targetEvent(ev)
+                        ).then(null, function(){
+                            cancel = true;
+                        })
+                    }
+
+                    if(! cancel){
+                        $http({
+                                 method : "POST",
+                                 url : "/send",
+                                 data : JSON.stringify({targ: $scope.current.id}),
+                                 headers : {
+                                       "Content-Type" : "application/json"
+                                 }
+                             }
+                           ).then(function(response) {
+                               if(response.data.trim() == "OK"){
+                                   refresh($scope.currentIndex);
+                                   $mdToast.show(
+                                     $mdToast.simple()
+                                       .textContent('OK')
+                                       .position("bottom right")
+                                       .hideDelay(3000)
+                                   );
+                               }
+                           }, function(){
+                               $mdToast.show(
+                                 $mdToast.simple()
+                                   .textContent('Ein Fehler tritt auf!')
+                                   .position("bottom right")
+                                   .hideDelay(3000)
+                               );
+                           }
+                        );
+                    }
+                }
+            );
+       }
+
         $scope.doku = function(ev){
             $http({
                       method : "POST",
@@ -83,7 +178,7 @@
                 }, function(){
                     $mdToast.show(
                       $mdToast.simple()
-                        .textContent('Ein Fehler tritt auf!.')
+                        .textContent('Ein Fehler tritt auf!')
                         .position("bottom right")
                         .hideDelay(3000)
                     );
@@ -165,8 +260,7 @@
                               }
                           }
                         ).then(function(response) {
-                            refresh();
-                            $scope.activeTabNr = 0;
+                            refresh($scope.currentIndex);
                             if(response.data.trim() == "OK"){
                                 $mdToast.show(
                                   $mdToast.simple()
@@ -198,18 +292,23 @@
             }
         );
 
-        var refresh = function(){
+        var refresh = function(idx){
+            idx = idx || 0;
+
             $http({
                       method : "GET",
                       url : "/jobs"
                   }
                 ).then(function(response) {
                     $scope.data = response.data;
+                    $scope.dataBackup = response.data;
                     var tmp = $scope.data.length;
                     $scope.cnt = tmp === 0?"keine aktive Stelle":tmp === 1 ? "Eine aktive Stelle" : "Insgesamt "+tmp + " Stellen";
-
-                    if(tmp > 0)
-                        $scope.current = $scope.data[0];
+                    $scope.cntBackup = $scope.cnt;
+                    if(tmp > 0){
+                        $scope.current = $scope.data[idx];
+                        $scope.email_status = $scope.current.durch_email ? "Direkt zumailen" : "Email Aktivieren";
+                    }
                     else
                         $scope.current = {};
                 }
@@ -221,6 +320,8 @@
         $scope.selectItem = function(i){
             $scope.current = $scope.data[i];
             $scope.activeTabNr = 2;
+            $scope.currentIndex = i;
+            $scope.email_status = $scope.current.durch_email ? "Direkt zumailen" : "Email Aktivieren";
         }
 
 
