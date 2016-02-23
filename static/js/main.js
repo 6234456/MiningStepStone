@@ -1,10 +1,11 @@
 (function () {
 
     var app = angular.module('myapp', ['ngMaterial'])
-    .controller('AppCtrl', function($scope, $http, $mdToast, $mdDialog) {
+    .controller('AppCtrl', function($scope, $http, $mdToast, $mdDialog, $filter) {
         $scope.anrede = ["N/A","F","M"];
         $scope.anspr_disabled = false;
         $scope.activeTabNr = 0;
+        $scope.sortOrder = true;
 
         $scope.updateSearchCnt = function(){
             var tmp = $scope.filtered.length;
@@ -16,6 +17,16 @@
             $scope.data = $scope.dataBackup;
             $scope.searchKey = "";
             $scope.cnt = $scope.cntBackup;
+        }
+
+        $scope.mySort = function(){
+            $scope.sortOrder = !$scope.sortOrder;
+            $scope.data = $filter('orderBy')($scope.data, "bewertung", $scope.sortOrder);
+        }
+
+        $scope.mySortTime = function(){
+            $scope.sortOrder = !$scope.sortOrder;
+            $scope.data = $filter('orderBy')($scope.data, "eingetragen_am", $scope.sortOrder);
         }
 
         var tmpAnspr = ""
@@ -251,6 +262,9 @@
                 .targetEvent(ev)
             ).then(
                 function(){
+                    var tmpHasKey = $scope.current['$$hashKey'];
+                    delete $scope.current['$$hashKey'];
+
                     $http({
                               method : "POST",
                               url : "/change",
@@ -260,7 +274,7 @@
                               }
                           }
                         ).then(function(response) {
-                            refresh($scope.currentIndex);
+//                            refresh($scope.currentIndex);
                             if(response.data.trim() == "OK"){
                                 $mdToast.show(
                                   $mdToast.simple()
@@ -278,6 +292,8 @@
                             );
                         }
                     );
+
+                    $scope.current['$$hashKey'] = tmpHasKey;
                 }
             );
         }

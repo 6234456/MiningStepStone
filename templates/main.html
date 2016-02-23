@@ -66,9 +66,15 @@
                                     {% raw %}
                                 </md-button>
 
-                                <md-button class="md-icon-button" aria-label="sort">
+                                <md-button class="md-icon-button" aria-label="sort" ng-click="mySort()">
                                     {% endraw %}
                                     <md-icon md-svg-src="{{ url_for('static', filename='icons/import.svg') }}"></md-icon>
+                                    {% raw %}
+                                </md-button>
+
+                                <md-button class="md-icon-button" aria-label="time" ng-click="mySortTime()">
+                                    {% endraw %}
+                                    <md-icon md-svg-src="{{ url_for('static', filename='icons/time.svg') }}"></md-icon>
                                     {% raw %}
                                 </md-button>
                             </div>
@@ -195,12 +201,15 @@
                                 <md-input-container class="md-block" flex="10">
                                     <md-button class="md-raised" ng-click="doku($event)">Doku bereitstellen</md-button>
                                 </md-input-container>
-                            </div>
 
-                            <div layout-gt-sm="row">
+                                <span flex></span>
+
                                 <md-input-container class="md-block" flex="10">
                                     <md-button class="md-raised" ng-click="email($event)">{{email_status}}</md-button>
                                 </md-input-container>
+                            </div>
+
+                            <div layout-gt-sm="row">
                             </div>
 
                         </form>

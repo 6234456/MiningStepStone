@@ -13,9 +13,11 @@ from docTemplateEngine import render
 import emailUtil
 import datetime
 import re, os
+import cfg
 
 app = Flask(__name__)
 db = DBUtil()
+cfginfo = cfg.info()
 
 @app.route("/")
 def hello():
@@ -63,24 +65,27 @@ def change():
 
 @app.route("/send", methods=['POST'])
 def send():
-    db.openSession()
-    targ = request.get_json()
+    if not (cfginfo['email_usr'] and cfginfo['email_pwd']):
+        raise ValueError("Bitte zuerst Zugangsdata in cfg.py festlegen!")
+    else:
+        db.openSession()
+        targ = request.get_json()
 
-    obj = db.session.query(Job).filter(Job.id==targ['targ']).one()
-    if obj:
-        # set status to 101
-        print(obj.status_id)
-        print(type(obj.status_id))
-        if obj.status_id == 100:
-            obj.status_id = 101
+        obj = db.session.query(Job).filter(Job.id==targ['targ']).one()
+        if obj:
+            # set status to 101
+            print(obj.status_id)
+            print(type(obj.status_id))
+            if obj.status_id == 100:
+                obj.status_id = 101
 
-        # generate doku
-        __prepareDoku(obj)
+            # generate doku
+            __prepareDoku(obj)
 
-        # send email
-        emailUtil.send("sgfxqw@gmail.com","xxxxxx", obj.email.strip(), "Bewerbung um eine Arbeitsplatz als " + obj.name, "Demo Text"
-             ,[re.sub("[\$\\\/\-\&]", "_", obj.arbeitgeber.name)+"/Anschreiben_Qiou Yang.docx", "common/Bewerbungsmappe_Qiou Yang.pdf"])
-        db.commit()
+            # send email
+            emailUtil.send(cfginfo['email_usr'],cfginfo['email_pwd'], obj.email.strip(), "Bewerbung um eine Arbeitsplatz als " + obj.name, "Demo Text"
+                 ,[re.sub("[\$\\\/\-\&]", "_", obj.arbeitgeber.name)+"/" + cfginfo['name_datei_anschreiben'], cfginfo['path_document']])
+            db.commit()
 
     return "OK"
 
@@ -117,7 +122,7 @@ def __prepareDoku(obj):
     anrede_dict = {
         'M' : ['Herr', 'Sehr geehrter Herr'],
         'F' : ['Frau', 'Sehr geehrte Frau'],
-        'N/A' : ['Human Resource', 'Sehr geehrte Damen und Herren,'],
+        'N/A' : ['Human Resources', 'Sehr geehrte Damen und Herren,'],
     }
 
     # German locale not installed
@@ -149,7 +154,7 @@ def __prepareDoku(obj):
         if not os.path.isdir(pName):
             os.mkdir(pName)
 
-        render(d, "demo.docx", pName +"/Anschreiben_Qiou Yang.docx")
+        render(d, d['path_template_anschreiben'], pName +"/" + cfginfo['name_datei_anschreiben'])
     else:
         raise TypeError
 
