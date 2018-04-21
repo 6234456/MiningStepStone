@@ -1,14 +1,13 @@
 # -*- coding: <utf-8> -*-
 
 # author:    Qiou Yang
-# email:     sgfxqw@gmail.com
+# email:     yang@qiou.eu
 # desc:      to extract all the relevant information from a stepstone page for the job application
 
 import bs4
 import requests
 from json import loads
-from re import compile, IGNORECASE
-from difflib import SequenceMatcher
+from re import compile, IGNORECASE, MULTILINE
 
 # iframe element loads the separate page which contains the critical info
 # 1.   fetch the raw page, parse the json string
@@ -30,48 +29,69 @@ def mining(url):
     content = requests.post(url, headers=headers)
 
     soup = bs4.BeautifulSoup(content.content.decode('utf-8'), "lxml")
-    # print(soup.prettify())
-
 
     # step 1
-    targStr = soup.select_one("script").string.strip().split("\n")
+    # store the js-object to obj-dict, key is the variables defined in script-tags
+    varReg = compile(r"var\s+(\S+)\s+=(.*);", MULTILINE)
+    obj = {j.group(1): loads(j.group(2)) for j in
+            [varReg.match(i.text.strip()) for i in soup.select("script")]
+            if j}
 
-    targStr[0] = "{"
-    targStr[-1] = "}"
-
-    obj = loads("".join(targStr))
 
     # dict to hold the info
-    info = {"jobID":obj['stst']['listing']['listingid'] , "url": url, "arbeitgeber":obj['stst']['company']['companyname'].strip()
-        ,"job":obj['stst']['listing']['title'].strip(), "istDurchEmail": obj['stst']['listing']['applyform']['type'] == "email", "agID":obj['stst']['company']['companyid'] }
+    info = {"jobID":obj['utag_data']['listing__listing_id'] ,
+            "url": url,
+            "job":obj['utag_data']['listing__title'],
+            "istDurchEmail": obj['utag_data']['listing__apply_dbtype'] == "internal_email",
+            "agID":obj['utag_data']['listing__company_id'] }
 
-    info['email'] = None
-    info['strasse'] = None
-    info['stadt'] = None
-    info['plz'] = None
+    # for the big publisher like PwC, there is no separate locationData but they have companycard__card
+    md2 = soup.select_one(".company-card__wrapper .company-card__title a")
+    if md2:
+        info["arbeitgeber"] = md2.text.strip()
+    else:
+        info["arbeitgeber"] = obj['locationData']['MAPDATA']['LOCATION']['COMPANYDATA']['NAME'] if 'locationData' in obj and obj['locationData'] else None
 
-    tempPlz = obj['stst']['listing']['zipcode'].strip()
-    tempStadt = obj['stst']['listing']['locationname'].strip() or obj['stst']['listing']['cityname'].strip()
+
+    info['email'], info['strasse'], info['plz'], info['stadt']= None, None, None, None
+
+
+    if 'locationData' in obj and 'MAPDATA' in obj['locationData'] :
+        info['strasse'] = obj['locationData']['MAPDATA']['LOCATION']['COMPANYDATA']['STREET'].strip()
+        info['stadt'] = obj['locationData']['MAPDATA']['LOCATION']['COMPANYDATA']['CITY'].strip()
+        info['plz'] = obj['locationData']['MAPDATA']['LOCATION']['COMPANYDATA']['POSTALCODE']
+
 
     # the url of content frame
     # http://www.stepstone.de/?event=OfferView.dspOfferViewHtml&offerId={jobID}
     url_iframe = "http://www.stepstone.de/?event=OfferView.dspOfferViewHtml&offerId={0}".format(info['jobID'])
-    url_main = soup.select_one("iframe")['src']
+    url_main = ""
+
+    if soup.select_one("iframe"):
+        url_main = soup.select_one("iframe")['src']
+
     if not ("www.stepstone.de" in url_main):
         url_main = url_iframe
 
 
     # step 1.5
     # http://www.stepstone.de/stellenangebote-des-unternehmens--{name_mit_bindstrich}--{id}.html
-    tmpl = r"http://www.stepstone.de/stellenangebote-des-unternehmens--{0}--{1}.html".format("-".join(info["arbeitgeber"].split(" ")), info["agID"])
+    tmpl = r"https://www.stepstone.de/cmp/de/{0}-{1}/jobs.html".format("-".join(info["arbeitgeber"].split(" ")), info["agID"])
     content = requests.post(tmpl, headers=headers)
     soup = bs4.BeautifulSoup(content.content.decode('utf-8'), "lxml")
 
     # street-address
     # the address of the headquarter, sometimes differs from the address on the advertisement
-    tempStrasse = soup.select_one(".street-address")
-    if tempStrasse:
-        tempStrasse = tempStrasse.string.strip()
+    tempLand, tempStadt, tempStrasse, tempPlz = "", "", "", ""
+    tmpArray = [j.text.strip() for j in [soup.select_one(i) for i in (
+        ".at-cqi_country", ".at-cqi_postcode", ".at-cqi_adress")] if j]
+
+    if len(tmpArray) == 3:
+        tempPlz, tempStadt = tmpArray[1].replace(tmpArray[0], "").strip().split(" ", 1)
+        tmpReg = compile(",\s*$")
+        tempStadt, tempStrasse = [tmpReg.sub("", i) for i in [tempStadt, tmpArray[2]]]
+        info['plz'], info['stadt'], info['strasse'] = tempPlz, tempStadt, tempStrasse
+
 
     # step2
     content = requests.post(url_main, headers=headers)
@@ -121,18 +141,6 @@ def mining(url):
         if not info['eintrittstermin'] and eintrittstermin.search(elems[i]):
             info['eintrittstermin'] = True
 
-    # if the stree not found, use the one registered on the employer info
-    if info['strasse'] is None:
-        info['strasse'] = tempStrasse
-    # if the stree exists, but resembles to the one on the registration, change to the latter
-    elif tempStrasse and SequenceMatcher(None, info['strasse'], tempStrasse).ratio() > 0.8:
-        info['strasse'] = tempStrasse
-
-    if info['plz'] is None:
-        info['plz'] = tempPlz
-        info['stadt'] = tempStadt
-    elif tempStadt and SequenceMatcher(None, info['stadt'], tempStadt).ratio() > 0.7:
-        info['stadt'] = tempStadt
 
     # search for ansprechpartner
     info['anrede'] = None
@@ -173,14 +181,10 @@ def __processStr(string, info, email, strasse, plzstadt, pos, i):
         info["email"] = email.findall(string)[0].strip()
         pos['email'] = i
 
-    if strasse.search(string):
+    if strasse.search(string) and not info['strasse']:
         info['strasse'] = strasse.findall(string)[0][0].strip()
 
-    if not info['plz'] and plzstadt.search(string):
+    if plzstadt.search(string):
         pos['plz'] = i
-        info['plz'] = plzstadt.findall(string)[0][1].strip()
-        info['stadt'] = plzstadt.findall(string)[0][2].strip()
-
-if __name__ == "__main__":
-    url = r"http://www.stepstone.de/stellenangebote--Business-Partner-Functional-Controlling-w-m-Dortmund-WILO-SE--3663586-inline.html"
-    print(mining(url))
+        info['plz'] = plzstadt.findall(string)[0][1].strip() if not info['plz'] else info['plz']
+        info['stadt'] = plzstadt.findall(string)[0][2].strip() if not info['stadt'] else info['stadt']
