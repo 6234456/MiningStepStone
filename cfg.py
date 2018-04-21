@@ -2,7 +2,7 @@ def info():
     d = dict()
     # info for Anschreiben
     d['path_template_anschreiben'] = "demo.docx"
-    d['path_template_email_text'] = ""
+    d['path_template_email_text'] = " "
     d['path_document'] = "common/Bewerbungsmappe_Qiou Yang.pdf"
     d['name_datei_anschreiben'] = "Anschreiben_Qiou Yang.docx"
 
