@@ -5,15 +5,18 @@
 # email:     sgfxqw@gmail.com
 # desc:      Web-GUI to interact with user
 
-from json import dumps
-from flask import Flask, render_template, request
-from ORM import DBUtil, Job, StatutsVeraenderung, entryAdapter
-from extraction import mining
-from docTemplateEngine import render
-import emailUtil
 import datetime
-import re, os
+import os
+import re
+from json import dumps
+
+from flask import Flask, render_template, request
+
 import cfg
+import emailUtil
+from ORM import DBUtil, Job, StatutsVeraenderung, entryAdapter
+from docTemplateEngine import render, parseText
+from extraction import mining
 
 app = Flask(__name__)
 db = DBUtil()
@@ -74,17 +77,16 @@ def send():
         obj = db.session.query(Job).filter(Job.id==targ['targ']).one()
         if obj:
             # set status to 101
-            print(obj.status_id)
-            print(type(obj.status_id))
             if obj.status_id == 100:
                 obj.status_id = 101
 
             # generate doku
-            __prepareDoku(obj)
+            emailBodyText = __prepareDoku(obj)
 
             # send email
-            emailUtil.send(cfginfo['email_usr'],cfginfo['email_pwd'], obj.email.strip(), "Bewerbung um eine Arbeitsplatz als " + obj.name, "Demo Text"
-                 ,[re.sub("[\$\\\/\-\&]", "_", obj.arbeitgeber.name)+"/" + cfginfo['name_datei_anschreiben'], cfginfo['path_document']])
+            emailUtil.send(cfginfo['email_usr'], cfginfo['email_pwd'], obj.email.strip(),
+                           "Bewerbung um eine Arbeitsplatz als " + obj.name, emailBodyText
+                           , [re.sub("[\$\\\/\-\&]", "_", obj.arbeitgeber.name)+"/" + cfginfo['name_datei_anschreiben'], cfginfo['path_document']])
             db.commit()
 
     return "OK"
@@ -154,7 +156,8 @@ def __prepareDoku(obj):
         if not os.path.isdir(pName):
             os.mkdir(pName)
 
-        render(d, d['path_template_anschreiben'], pName +"/" + cfginfo['name_datei_anschreiben'])
+        render(d, cfginfo['path_template_anschreiben'], pName + "/" + cfginfo['name_datei_anschreiben'])
+        return parseText(d, cfginfo['path_template_email_text'])
     else:
         raise TypeError
 

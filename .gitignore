@@ -1,3 +1,5 @@
 *.iml
 *.db
 .idea/*
+common/*
+cfg.py

@@ -5,8 +5,8 @@
 # email:     sgfxqw@gmail.com
 # desc:      send email with attachments to the target mailbox
 
+import os
 import smtplib
-from os.path import basename
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -28,8 +28,8 @@ def send(send_from, pwd, send_to, subject, text, files=None):
         with open(f, "rb") as fil:
             msg.attach(MIMEApplication(
                     fil.read(),
-                    Content_Disposition='attachment; filename="%s"' % basename(f),
-                    Name=basename(f)
+                Content_Disposition='attachment; filename="%s"' % os.path.basename(f),
+                Name=os.path.basename(f)
             ))
 
 
