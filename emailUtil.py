@@ -2,7 +2,7 @@
 
 
 # author:    Qiou Yang
-# email:     sgfxqw@gmail.com
+# email:     yang@qiou.eu
 # desc:      send email with attachments to the target mailbox
 
 import os
