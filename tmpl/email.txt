@@ -1,0 +1,7 @@
+{{ arbeitgeber }}
+{{ ansprechpartner_address }}
+{{ strasse}}
+{{ plz}} {{ stadt}}
+								                                Stadt, den {{date}}
+Bewerbung um einen Arbeitsplatz als {{ name }}
+{{ brief_anrede }}

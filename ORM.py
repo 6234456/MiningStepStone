@@ -118,8 +118,8 @@ def entryAdapter(info):
     j.name = info['job']
     j.id = int(info['jobID'])
 
-    j.eintritt = info['eintrittstermin']
-    j.gehalt = info['gehaltsvorstellung']
+    j.eintritt = None
+    j.gehalt = None
 
     j.stadt = info['stadt']
     j.plz = info['plz']
@@ -127,13 +127,19 @@ def entryAdapter(info):
     j.strasse = info['strasse']
 
     j.url = info['url']
-    j.durch_email = info['istDurchEmail']
-    j.email = info['email']
+    if 'email' in info:
+        j.email = info['email']
+    else:
+        j.email = None
+
+    j.durch_email = True
 
     j.anrede = info['anrede']
     j.ansprechpartner = info['ansprechpartner']
-    j.ansp_vor = info['ansp_vor']
-    j.ansp_nach = info['ansp_nach']
+
+    if info['ansprechpartner']:
+        j.ansp_vor = info['ansprechpartner'].split(" ")[0]
+        j.ansp_nach = info['ansprechpartner'].split(" ")[1]
 
     j.eingetragen_am = datetime.datetime.now()
 

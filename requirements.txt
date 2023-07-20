@@ -1,0 +1,4 @@
+python-docx
+jinja2
+sqlalchemy
+flask
