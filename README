@@ -3,5 +3,6 @@ Installation
 1. Run migrate.py to prepare the database
 2. Run run.py to launch the server
 3. Open your browser, navigate to 127.0.0.1:5000
-4. Switch to the Tab "NEUE STELLE" and paste the link of the stepstone page to the blank and hit Enter
+3a. Run TamperMonkey Script (tampermonkey.js) on your target StepStone Page, result will be copied to your clipboard.
+4. Switch to the Tab "NEUE STELLE" and paste the result of the stepstone page to the blank and hit Enter
 5. Enjoy
