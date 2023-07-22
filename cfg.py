@@ -8,6 +8,8 @@ def info():
 
     # info for direct apply
     d['email_usr'] = "sgfxqw@gmail.com"
+    d['email_smtp_server'] = "smtp.gmail.com"
+    d['email_smtp_server_port'] = 587
     d['email_pwd'] = ""
 
     return d

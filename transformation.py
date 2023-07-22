@@ -8,6 +8,7 @@
 import datetime
 import os
 import re
+import urllib.parse
 from json import dumps
 
 from flask import Flask, render_template, request
@@ -40,7 +41,7 @@ def status():
 @app.route("/add", methods=['POST'])
 def add():
     db.openSession()
-    url = request.form.get('url')
+    url = urllib.parse.unquote(request.form.get('url'))
     db.add_all(mining(url), entryAdapter)
     db.commit()
     return "OK"
@@ -85,8 +86,8 @@ def send():
 
             # send email
             emailUtil.send(cfginfo['email_usr'], cfginfo['email_pwd'], obj.email.strip(),
-                           "Bewerbung um eine Arbeitsplatz als " + obj.name, emailBodyText
-                           , [re.sub("[\$\\\/\-\&]", "_", obj.arbeitgeber.name)+"/" + cfginfo['name_datei_anschreiben'], cfginfo['path_document']])
+                           "Bewerbung um eine Arbeitsplatz als " + obj.name, emailBodyText, cfginfo['email_smtp_server'],
+                           cfginfo['email_smtp_server_port'], [re.sub("[\$\\\/\-\&]", "_", obj.arbeitgeber.name)+"/" + cfginfo['name_datei_anschreiben'], cfginfo['path_document']])
             db.commit()
 
     return "OK"

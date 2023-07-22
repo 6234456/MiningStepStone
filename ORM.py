@@ -138,8 +138,11 @@ def entryAdapter(info):
     j.ansprechpartner = info['ansprechpartner']
 
     if info['ansprechpartner']:
-        j.ansp_vor = info['ansprechpartner'].split(" ")[0]
-        j.ansp_nach = info['ansprechpartner'].split(" ")[1]
+        if len(info['ansprechpartner'].split(" ")) == 1:
+            j.ansp_nach = info['ansprechpartner'].split(" ")[0]
+        else:
+            j.ansp_vor = info['ansprechpartner'].split(" ")[0]
+            j.ansp_nach = info['ansprechpartner'].split(" ")[1]
 
     j.eingetragen_am = datetime.datetime.now()
 

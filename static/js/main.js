@@ -348,7 +348,7 @@
                 $http({
                           method : "POST",
                           url : "/add",
-                          data : "url=" + $scope.queryURL,
+                          data : "url=" + encodeURIComponent($scope.queryURL),
                           headers : {
                                 "Content-Type" : "application/x-www-form-urlencoded"
                           }
